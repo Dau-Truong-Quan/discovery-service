@@ -3,3 +3,50 @@ spring:
     name: discovery-service
   config:
     import: optional:configserver:http://localhost:8888
+
+server:
+  port: 8761
+
+# --- Eureka Server Configuration ---
+# CRITICAL: Prevent the server from registering with itself
+eureka:
+  instance:
+    hostname: localhost
+    # Don't register this instance with Eureka (it IS Eureka)
+    instance-id: ${spring.application.name}:${server.port}
+
+  client:
+    # CRITICAL: Disable self-registration
+    register-with-eureka: false
+    # CRITICAL: Don't fetch registry (this server is the registry)
+    fetch-registry: false
+    # Eureka server endpoint
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+  server:
+    # Enable self-preservation mode (recommended for production)
+    enable-self-preservation: true
+    # How long (milliseconds) before evicting instances marked for deletion
+    eviction-interval-timer-in-ms: 60000
+    # Number of registrations to expect at startup (helps with self-preservation)
+    expected-client-renewal-interval-seconds: 30
+
+# --- Management Endpoints ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+
+# --- Logging ---
+logging:
+  level:
+    root: INFO
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
